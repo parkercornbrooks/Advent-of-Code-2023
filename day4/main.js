@@ -1,7 +1,7 @@
 const readFile = require('../utils/ReadFile')
 const inputFile = 'input.txt'
 
-class LineParser {
+class ScratchCard {
   #splitRegex = /[:|]/
   winners;
   picks;
@@ -44,38 +44,56 @@ class LineParser {
   }
 }
 
-let total = 0
-let cardCounts = {}
-let totalLines = 0
+class CardCounter {
+  cardCounts = {};
+  totalLines = 0;
+  addOne(id) {
+    this.ensureCountIsInitialized(id)
+    this.cardCounts[id] += 1
+  }
+  addToNextCounts(id, winners) {
+    for (let i=id+1; i < id+1+winners; i++) {
+      this.ensureCountIsInitialized(i)
+      this.cardCounts[i] += this.cardCounts[id]
+    }
+  }
+  sumCounts() {
+    let totalCount = 0
+    for (let [id, count] of Object.entries(this.cardCounts)) {
+      if (id <= this.totalLines) {
+        totalCount += count
+      }
+    }
+    return totalCount
+  }
+  ensureCountIsInitialized(id) {
+    if (!this.cardCounts[id]) {
+      this.cardCounts[id] = 0
+    }
+  }
+}
+
+let scoreTotal = 0
+const cardCounter = new CardCounter()
 
 function forLine(line) {
-  const parser = new LineParser(line)
-  totalLines = parser.id
-  if (!cardCounts[parser.id]) {
-    cardCounts[parser.id] = 0
-  }
-  cardCounts[parser.id] += 1
-  const score = parser.score()
-  const winningPicks = parser.winningPickCount()
-  for (let i=parser.id+1; i < parser.id+1+winningPicks; i++) {
-    if (!cardCounts[i]) {
-      cardCounts[i] = cardCounts[parser.id]
-    }
-    else {
-      cardCounts[i] = cardCounts[i] + cardCounts[parser.id]
-    }
-  }
-  total += score
+  const card = new ScratchCard(line)
+
+  const score = card.score()
+  scoreTotal += score
+
+  const currentId = card.id
+
+  cardCounter.totalLines = currentId
+  cardCounter.addOne(currentId)
+
+  const winningPicks = card.winningPickCount()
+  cardCounter.addToNextCounts(currentId, winningPicks)
 }
 
 function afterFile() {
-  let totalCount = 0
-  for (let [id, count] of Object.entries(cardCounts)) {
-    if (id <= totalLines) {
-      totalCount += count
-    }
-  }
-  console.log(`Score total: ${total}`)
+  console.log(`Score total: ${scoreTotal}`)
+  const totalCount = cardCounter.sumCounts()
   console.log(`Card count: ${totalCount}`)
 }
 
