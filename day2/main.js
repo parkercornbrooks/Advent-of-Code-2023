@@ -54,8 +54,8 @@ class GameParser {
   }
   parseCubeCount(count) {
     const [amount, color] = count.trim().split(' ')
-    this.counts[color] = this.counts[color] || []
-    this.counts[color].push(amount)
+    this.counts[color] = this.counts[color] || 0
+    this.counts[color] = Math.max(this.counts[color], amount)
   }
 }
 
@@ -75,19 +75,13 @@ class Game {
     return true
   }
   colorIsPossible(color, total) {
-    const maxForColor = this.maxCount(color)
+    const maxForColor = this.counts[color]
     return maxForColor <= total
-  }
-  maxCount(color) {
-    if (!this.counts[color]) {
-      throw new Error(`Color ${color} did not exist`)
-    }
-    return Math.max(...this.counts[color])
   }
   power() {
     let power = 1
     for (const color of ['red', 'green', 'blue']) {
-      power *= this.maxCount(color)
+      power *= this.counts[color]
     }
     return power
   }
