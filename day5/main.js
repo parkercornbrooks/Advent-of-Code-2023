@@ -23,6 +23,7 @@ function forLine(line) {
 
 function afterFile() {
   console.log(`Part 1: ${almanac.getLowestLocation()}`)
+  console.log(`Part 2: ${almanac.getLowestLocationPart2()}`)
 }
 
 readFile(

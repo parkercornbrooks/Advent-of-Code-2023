@@ -56,6 +56,21 @@ class Almanac {
     const locations = this.getAllLocations()
     return Math.min(...locations)
   }
+  getLowestLocationPart2() {
+    let lowest = Infinity;
+    this.seeds.forEach((seed, ind, arr) => {
+      if (ind % 2 === 0) {
+        const amtToAdd = arr[ind+1]
+        for (let i=seed; i < seed+amtToAdd; i++) {
+          const location = this.traverse(i)
+          if (location < lowest) {
+            lowest = location
+          }
+        }
+      }
+    })
+    return lowest
+  }
   getAllLocations() {
     return this.seeds.map(seed => {
       return this.traverse(seed)
