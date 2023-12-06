@@ -7,16 +7,19 @@ const totalCounts = {
   blue: 14,
 }
 let runningTotal = 0
+let powerTotal = 0
 
 function forGame(line) {
   const game = new Game(line)
   if (game.isPossible(totalCounts)) {
     runningTotal += game.id
   }
+  powerTotal += game.power()
 }
 
 function afterGames() {
   console.log(`Total: ${runningTotal}`)
+  console.log(`Power Total: ${powerTotal}`)
 }
 
 class GameParser {
@@ -80,6 +83,13 @@ class Game {
       throw new Error(`Color ${color} did not exist`)
     }
     return Math.max(...this.counts[color])
+  }
+  power() {
+    let power = 1
+    for (const color of ['red', 'green', 'blue']) {
+      power *= this.maxCount(color)
+    }
+    return power
   }
 }
 
