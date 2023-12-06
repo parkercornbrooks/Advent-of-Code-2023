@@ -10,8 +10,13 @@ class LineParser {
   }
   deconstruct(line) {
     const [name, winners, picks] = line.split(this.#splitRegex)
+    this.parseId(name)
     this.manageWinners(winners)
     this.managePicks(picks)
+  }
+  parseId(name) {
+    const [_, id] = name.split(/\s+/)
+    this.id = parseInt(id)
   }
   manageWinners(numberString) {
     const winners = numberString.trim().split(/\s+/)
@@ -40,15 +45,38 @@ class LineParser {
 }
 
 let total = 0
+let cardCounts = {}
+let totalLines = 0
 
 function forLine(line) {
   const parser = new LineParser(line)
+  totalLines = parser.id
+  if (!cardCounts[parser.id]) {
+    cardCounts[parser.id] = 0
+  }
+  cardCounts[parser.id] += 1
   const score = parser.score()
+  const winningPicks = parser.winningPickCount()
+  for (let i=parser.id+1; i < parser.id+1+winningPicks; i++) {
+    if (!cardCounts[i]) {
+      cardCounts[i] = cardCounts[parser.id]
+    }
+    else {
+      cardCounts[i] = cardCounts[i] + cardCounts[parser.id]
+    }
+  }
   total += score
 }
 
 function afterFile() {
-  console.log(total)
+  let totalCount = 0
+  for (let [id, count] of Object.entries(cardCounts)) {
+    if (id <= totalLines) {
+      totalCount += count
+    }
+  }
+  console.log(`Score total: ${total}`)
+  console.log(`Card count: ${totalCount}`)
 }
 
 readFile(
