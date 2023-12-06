@@ -20,6 +20,9 @@ const numbersRegex = /\d+/g
 let times
 let distances
 
+let timePart2
+let distancePart2
+
 function calculateTimeValues(raceTime, recordDistance) {
   const a = -1
   const b = raceTime
@@ -42,10 +45,12 @@ function forLine(line) {
   if (line.startsWith('Time')) {
     const timeStrings = line.match(numbersRegex)
     times = timeStrings.map(s => parseInt(s))
+    timePart2 = timeStrings.join('')
   }
   else if (line.startsWith('Distance')) {
     const distanceStrings = line.match(numbersRegex)
     distances = distanceStrings.map(s => parseInt(s))
+    distancePart2 = distanceStrings.join('')
   }
 }
 
@@ -57,6 +62,9 @@ function afterFile() {
     totalMultiplier *= waysToWin
   })
   console.log('Part 1:', totalMultiplier)
+
+  const waysToWin = getWaysToWin(timePart2, distancePart2)
+  console.log('Part 2:', waysToWin)
 }
 
 readFile(
