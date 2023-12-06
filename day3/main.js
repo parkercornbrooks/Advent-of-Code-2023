@@ -2,6 +2,7 @@ const readFile = require('../utils/ReadFile')
 const inputFile = 'input.txt'
 
 class Item {
+  numberId = null
   constructor(char, row, col) {
     this.char = char
     this.row = row
@@ -10,9 +11,15 @@ class Item {
   isSymbol() {
     return !(this.char === '.' || !this.char)
   }
+  isGearSymbol() {
+    return this.char === '*'
+  }
   isDigit() {
     const digitChars = '0123456789'
     return digitChars.includes(this.char)
+  }
+  setNumberId(numberId) {
+    this.numberId = numberId
   }
 }
 
@@ -36,6 +43,7 @@ class LineParser {
       this.itemMap[loc] = item
       if (item.isDigit()) {
         this.currentNumberStr += char
+        item.setNumberId(this.universalNumberId())
       }
       else {
         this.checkNumberEnd()
@@ -53,6 +61,7 @@ class LineParser {
       colStart: this.currentColIndex - this.currentNumberLength(),
       colEnd: this.currentColIndex,
       rowIndex: this.rowInd,
+      id: this.universalNumberId(),
     })
     this.numbers.push(partNumber)
     this.currentNumberId++
@@ -60,6 +69,9 @@ class LineParser {
   }
   currentNumberLength() {
     return this.currentNumberStr.length
+  }
+  universalNumberId() {
+    return `${this.rowInd}-${this.currentNumberId}`
   }
 }
 
@@ -71,6 +83,7 @@ class PartNumber {
     this.rowIndex = partNumber.rowIndex
     this.colStart = partNumber.colStart
     this.colEnd = partNumber.colEnd
+    this.id = partNumber.id
     this.constructCellList()
   }
   constructCellList() {
@@ -135,6 +148,67 @@ class EngineSchematic {
     }
     return false
   }
+  calculateGearRatioSum() {
+    let totalGR = 0
+    const gears = this.findGearChars()
+    for (let gear of gears) {
+      const ratio = this.searchForGear(gear)
+      totalGR += ratio
+    }
+    return totalGR
+  }
+  findGearChars() {
+    const gearItems = []
+    const items = Object.values(this.itemMap)
+    for (let item of items) {
+      if (item.isGearSymbol()) {
+        gearItems.push(item)
+      }
+    }
+    return gearItems
+  }
+  searchForGear(gear) {
+    const numberIds = new Set()
+    const surroundingItems = this.getSurroundingItems(gear)
+    for (let item of surroundingItems) {
+      if (item && item.numberId) {
+        numberIds.add(item.numberId)
+      }
+    }
+    if (numberIds.size === 2) {
+      const gearRatio = this.calculateGearRatio(numberIds)
+      return gearRatio
+    }
+    return 0
+  }
+  getSurroundingItems(gear) {
+    const items = []
+    const vertItems = this.getVerticalItems(gear)
+    items.push(...vertItems)
+    for (let item of [gear, ...vertItems]) {
+      items.push(...this.getHorizontalItems(item))
+    }
+    return items
+  }
+  getVerticalItems(item) {
+    const above = this.itemMap[`${item.row-1}-${item.col}`]
+    const below = this.itemMap[`${item.row+1}-${item.col}`]
+    return [above, below]
+  }
+  getHorizontalItems(item) {
+    const left = this.itemMap[`${item.row}-${item.col-1}`]
+    const right = this.itemMap[`${item.row}-${item.col+1}`]
+    return [left, right]
+  }
+  calculateGearRatio(numberIds) {
+    let ratio = 1
+    numberIds.forEach(numberId => {
+      const number = this.foundNumbers.find(n => n.id === numberId)
+      const value = number.value
+      ratio *= value
+    })
+    return ratio
+  }
 }
 
 readFile(
@@ -155,4 +229,5 @@ function forLine(line) {
 
 function afterFile() {
   console.log(`Total Part Numbers: ${schematic.sumOfPartNumbers()}`)
+  console.log(`Total Gear Ratio: ${schematic.calculateGearRatioSum()}`)
 }
