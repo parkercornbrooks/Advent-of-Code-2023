@@ -1,4 +1,5 @@
 const readFile = require('../utils/ReadFile')
+const LCM = require('./leastCommonMultiple')
 const inputFile = 'input.txt'
 
 const instructionParseRegex = /[A-Z]{3}/g
@@ -43,13 +44,21 @@ function traversePart1() {
 function traversePart2() {
   let currentNodes = Object.keys(map).filter(k => k[2] === 'A')
   let step = 0
-  while (!allEndWithZ(currentNodes)) {
+  let cycleLengths = currentNodes.map(_ => 0)
+  while (!cycleLengths.every(length => length > 0)) {
     let index = calculateIndex(step)
     const instruction = instructions[index]
     currentNodes = currentNodes.map(currentNode => map[currentNode][instruction])
     step++
+    currentNodes.forEach((node, ghost) => {
+      if (node[2] === 'Z') {
+        console.log(`Ghost ${ghost} hit node ${node} after ${step} steps`)
+        cycleLengths[ghost] = step
+      }
+    })
   }
-  console.log('Part 2:', step)
+  const totalSteps = LCM(cycleLengths)
+  console.log('Part 2:', totalSteps)
 }
 
 function calculateIndex(step) {
