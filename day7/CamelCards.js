@@ -1,25 +1,11 @@
-const handTypes = {
-  FIVE: 7,
-  FOUR: 6,
-  FULL: 5,
-  THREE: 4,
-  TWO: 3,
-  ONE: 2,
-  HIGH: 1,
-}
-
 const classicRanks = 'AKQJT98765432'
 const jokerRanks = 'AKQT98765432J'
 
 class Hand {
-  constructor(line) {
-    this.parseLine(line)
+  constructor(cards, bid) {
+    this.cards = cards
+    this.bid = parseInt(bid)
     this.classify()
-  }
-  parseLine(line) {
-    const [hand, bidString] = line.split(' ')
-    this.cards = hand
-    this.bid = parseInt(bidString)
   }
   classify() {
     this.classifyStandard()
@@ -45,30 +31,17 @@ class Hand {
     return counts
   }
   getTypeFromCounts(counts) {
-    let type
-    if (counts.includes(5)) {
-      type = handTypes.FIVE
-    } else if (counts.includes(4)) {
-      type = handTypes.FOUR
-    } else if (counts.includes(3) && counts.includes(2)) {
-      type = handTypes.FULL
-    } else if (counts.includes(3)) {
-      type = handTypes.THREE
-    } else if (counts.includes(2) && counts.length === 3) {
-      type = handTypes.TWO
-    } else if (counts.includes(2)) {
-      type = handTypes.ONE
-    } else {
-      type = handTypes.HIGH
-    }
-    return type
+    const maxCount = Math.max(...counts)
+    const length = counts.length
+    const typeRank = maxCount - length
+    return typeRank
   }
 }
 
 class CamelCards {
   hands = []
-  addHand(line) {
-    const hand = new Hand(line)
+  addHand(cards, bid) {
+    const hand = new Hand(cards, bid)
     this.hands.push(hand)
   }
   computeWinnings(rule) {
@@ -95,16 +68,11 @@ module.exports = CamelCards
 
 function compareHands(type, rankings) {
   return function(a,b) {
-    if (a[type] < b[type]) {
-      return -1
-    } else if (a[type] > b[type]) {
-      return 1
-    }
+    const typeDiff = a[type] - b[type]
+    if (typeDiff) return typeDiff
     for (let i=0; i<a.cards.length; i++) {
-      const diff = rankings.indexOf(b.cards[i]) - rankings.indexOf(a.cards[i])
-      if (diff !== 0) {
-        return diff
-      }
+      const cardDiff = rankings.indexOf(b.cards[i]) - rankings.indexOf(a.cards[i])
+      if (cardDiff) return cardDiff
     }
     return 0
   }
@@ -112,9 +80,7 @@ function compareHands(type, rankings) {
 
 function addToHighestCount(counts, jokerCount) {
   const countValues = Object.values(counts)
-  if (jokerCount === 5) {
-    return [5]
-  }
+  if (jokerCount === 5) return [5]
   if (jokerCount) {
     const maxVal = Math.max(...countValues)
     const index = countValues.indexOf(maxVal)

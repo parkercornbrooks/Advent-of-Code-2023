@@ -5,7 +5,8 @@ const inputFile = 'input.txt'
 const game = new CamelCards()
 
 function forLine(line) {
-  game.addHand(line)
+  const [cards, bid] = line.split(' ')
+  game.addHand(cards, bid)
 }
 
 function afterFile() {
