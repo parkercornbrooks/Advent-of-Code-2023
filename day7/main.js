@@ -9,8 +9,10 @@ function forLine(line) {
 }
 
 function afterFile() {
-  const winnings = game.computeWinnings()
-  console.log('Part 1:', winnings)
+  const classicWinnings = game.computeWinnings('classic')
+  console.log('Part 1:', classicWinnings)
+  const jokerWinnings = game.computeWinnings('joker')
+  console.log('Part 2:', jokerWinnings)
 }
 
 readFile(
