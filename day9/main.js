@@ -3,6 +3,7 @@ const readFile = require('../utils/ReadFile')
 const inputFile = 'input.txt'
 
 let totalPart1 = 0
+let totalPart2 = 0
 
 function forLine(line) {
   const sequence = line
@@ -11,10 +12,14 @@ function forLine(line) {
     .reverse()
   const nextNumber = findNextNumberIn(sequence)
   totalPart1 += nextNumber
+
+  const previousNumber = findNextNumberIn(sequence.reverse())
+  totalPart2 += previousNumber
 }
 
 function afterFile() {
   console.log('Part 1 Total:', totalPart1)
+  console.log('Part 2 Total:', totalPart2)
 }
 
 function findNextNumberIn(sequence) {
@@ -34,6 +39,7 @@ function findNextNumberIn(sequence) {
       }
     }
   }
+  return sequences.reduce((a,c) => a+c[0], 0)
 }
 
 function isPatternFound(sequence) {
