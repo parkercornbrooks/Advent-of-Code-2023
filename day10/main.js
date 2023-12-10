@@ -20,23 +20,37 @@ const charMap = {
 }
 
 let sPosition;
+let sTile;
 const grid = []
+const visited = {}
 let currentRowIndex = 0
 
 function findPipeEntryPoints(pos) {
   const nextSteps = []
+  let sTileMap = [0,0,0,0]
   // assumption: only two surrounding blocks point towards the S
   directions.forEach((dir) => {
     const [newPos, tile] = nextPosition(pos, dir)
     if (tile && cameFrom(dir, tile)) {
+      sTileMap = sTileMap.map((x, ind) => x | dir[ind])
       const next = nextDir(dir, tile)
+      visited[positionString(newPos)] = true
       nextSteps.push({
         pos: newPos,
         dir: next,
       })
     }
   })
+  setSTileValue(sTileMap)
   return nextSteps
+}
+
+function setSTileValue(sTileMap) {
+  const charMapToArray = Object.entries(charMap)
+  const found = charMapToArray.find(([char, representation]) =>{
+    return representation.join() === sTileMap.join()
+  })
+  sTile = found[0]
 }
 
 function nextPosition(pos, dir) {
@@ -57,11 +71,16 @@ function nextDir(dir, charInOut) {
   return charInOut.map((x, ind) => x ^ dir[ind])
 }
 
+function positionString(pos) {
+  return `${pos[0]} - ${pos[1]}`
+}
+
 function forLine(line) {
   if (!sPosition) {
     const sIndex = line.indexOf('S')
     if (sIndex !== -1) {
       sPosition = [currentRowIndex, sIndex]
+      visited[positionString(sPosition)] = true
     }
   }
   grid.push(line)
@@ -71,8 +90,6 @@ function forLine(line) {
 
 function afterFile() {
   let nextTiles = findPipeEntryPoints(sPosition)
-
-  const visited = {}
   let step = 1
   let foundIntersection = false
   while (!foundIntersection) {
@@ -80,7 +97,7 @@ function afterFile() {
     nextTiles = nextTiles.map(tile => {
       const [nextPos, nextTile] = nextPosition(tile.pos, tile.dir)
       const nextDirection = nextDir(tile.dir, nextTile)
-      const posString = `${nextPos[0]} - ${nextPos[1]}`
+      const posString = positionString(nextPos)
       if (visited[posString]) {
         foundIntersection = true
       } else {
@@ -93,6 +110,42 @@ function afterFile() {
     })
   }
   console.log(`Part 1: ${step} steps`)
+
+  let insideCount = 0
+  grid.forEach((row, rowInd) => {
+    let isInside = false
+    let isOnLine = false
+    let flipOn = ''
+    for (let colInd=0; colInd<row.length; colInd++) {
+      let tile = row[colInd]
+      if (tile === 'S') {
+        tile = sTile
+      }
+      const tilePositionString = positionString([rowInd, colInd])
+      if (visited[tilePositionString]) {
+        if (tile === '|') {
+          isInside = !isInside
+        }
+        else if (tile === 'F') {
+          isOnLine = true
+          flipOn = 'J'
+        }
+        else if (tile === 'L') {
+          isOnLine = true
+          flipOn = '7'
+        }
+        else if (['J', '7'].includes(tile)) {
+          isOnLine = false
+          if (flipOn === tile) {
+            isInside = !isInside
+          }
+        }
+      } else if (isInside) {
+        insideCount ++
+      }
+    }
+  })
+  console.log(`Part 2: ${insideCount} tiles inside`)
 }
 
 readFile(
