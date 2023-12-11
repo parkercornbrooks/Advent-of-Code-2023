@@ -22,26 +22,37 @@ function forLine(line) {
 }
 
 function afterFile() {
-  let totalDist = 0
+  let totalDistPart1 = 0
+  let totalDistPart2 = 0
   for (let i=0; i<galaxies.length-1; i++) {
     for (let j=i+1; j<galaxies.length; j++) {
-      const dist = calculateDist(galaxies[i], galaxies[j])
-      totalDist += dist
+      const distPart1 = calculateDist(galaxies[i], galaxies[j], 2)
+      const distPart2 = calculateDist(galaxies[i], galaxies[j], 1000000)
+      totalDistPart1 += distPart1
+      totalDistPart2 += distPart2
     }
   }
-  console.log('Part 1:', totalDist)
+  console.log('Part 1:', totalDistPart1)
+  console.log('Part 2:', totalDistPart2)
 }
 
-function calculateDist(a, b) {
-  const sortedX = [a[1], b[1]].sort(sortByNum)
-  const sortedY = [a[0], b[0]].sort(sortByNum)
-  const horiz = sortedX[1] - sortedX[0]
-  const horizExtra = columns.slice(sortedX[0], sortedX[1]).filter(Boolean).length
-  const vert = sortedY[1] - sortedY[0]
-  const vertExtra = rows.slice(sortedY[0], sortedY[1]).filter(Boolean).length
+function calculateDist(a, b, pad) {
+  const horizontalDistance = calculateDistance(a[1], b[1], pad, columns)
+  const verticalDistance = calculateDistance(a[0], b[0], pad, rows)
   
-  const total = horiz + horizExtra + vert + vertExtra
+  const total = horizontalDistance + verticalDistance
   return total
+}
+
+function calculateDistance(a, b, pad, dirArray) {
+  const sorted = [a, b].sort(sortByNum)
+  const perceivedDist = sorted[1] - sorted[0]
+  let extraDist = dirArray
+    .slice(sorted[0], sorted[1])
+    .filter(Boolean)
+    .length
+  extraDist = extraDist * (pad-1)
+  return perceivedDist + extraDist
 }
 
 function sortByNum(a,b) { return a-b }
