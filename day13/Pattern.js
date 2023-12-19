@@ -1,76 +1,48 @@
 class Pattern {
-  rows = []
-  verticalRefMap = []
+  grid = []
+  reflection = 0
+  smudgeReflection = 0
   addLine(line) {
-    this.rows.push(line)
-    this.initializeRefMap(line.length-1)
-    this.fillRefMap(line)
-  }
-  initializeRefMap(length) {
-    if (this.verticalRefMap.length === 0) {
-      this.verticalRefMap = new Array(length).fill(true)
-    }
-  }
-  fillRefMap(line) {
-    for (let i=0; i<line.length-1; i++) {
-      if (line[i] !== line[i+1]) {
-        this.verticalRefMap[i] = false
-      }
-    }
+    this.grid.push(line.replaceAll('#',1).replaceAll('.',0).split(''))
   }
   assess() {
-    return this.searchVerticalReflections() || this.searchHorizontalReflections()*100
+    this.searchHorizontalReflections(this.grid, 100)
+    this.searchVerticalReflections()
+  }
+  searchHorizontalReflections(grid, multiplier) {
+    for (let i=0; i<grid.length-1; i++) {
+      let reflectionDiff = 0
+      let r1 = i
+      let r2 = i+1
+      while (r1 >= 0 && r2 < grid.length) {
+        reflectionDiff += compareRows(grid[r1], grid[r2])
+        r1--
+        r2++
+      }
+      if (reflectionDiff === 0) {
+        this.reflection = (i+1) *multiplier
+      }
+      if (reflectionDiff === 1) {
+        this.smudgeReflection = (i+1) *multiplier
+      }
+    }
   }
   searchVerticalReflections() {
-    for (let i=0; i<this.verticalRefMap.length; i++) {
-      if (this.verticalRefMap[i]) {
-        //console.log(`possible vertical reflection at ${i+1}`)
-        const isRef = this.searchColumnsFrom(i)
-        if (isRef) {
-          //console.log(`  ${i+1} is a reflection`)
-          return i+1
-        }
-      }
-    }
+    const grid = transpose(this.grid)
+    this.searchHorizontalReflections(grid, 1)
   }
-  searchHorizontalReflections() {
-    for (let i=0; i<this.rows.length-1; i++) {
-      if (this.rows[i] === this.rows[i+1]) {
-        //console.log(`possible horizontal reflection at ${i+1}`)
-        const isRef = this.searchRowsFrom(i)
-        if (isRef) {
-          //console.log(`  ${i+1} is a reflection`)
-          return i+1
-        }
-      }
-    }
+}
+
+function transpose(matrix) {
+  return matrix[0].map((_, ind) => matrix.map(row => row[ind]))
+}
+
+function compareRows(r1, r2) {
+  let sum = 0
+  for (let i=0; i<r1.length; i++) {
+    sum += r1[i] ^ r2[i]
   }
-  searchColumnsFrom(colInd) {
-    let c1 = colInd-1
-    let c2 = colInd+2
-    while (c1 >= 0 && c2 < this.rows[0].length) {
-      for (let row of this.rows) {
-        if (row[c1] !== row[c2]) {
-          return false
-        }
-      }
-      c1--
-      c2++
-    }
-    return true
-  }
-  searchRowsFrom(rowInd) {
-    let r1 = rowInd-1
-    let r2 = rowInd+2
-    while(r1 >= 0 && r2 < this.rows.length) {
-      if (this.rows[r1] !== this.rows[r2]) {
-        return false
-      }
-      r1--
-      r2++
-    }
-    return true
-  }
+  return sum
 }
 
 module.exports = Pattern

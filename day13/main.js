@@ -1,20 +1,15 @@
 const readFile = require('../utils/ReadFile')
 const Pattern = require('./Pattern')
 
-
 let currentPattern = new Pattern()
 const patterns = [
   currentPattern
 ]
 
-function newPattern() {
-  currentPattern = new Pattern()
-  patterns.push(currentPattern)
-}
-
 function forLine(line) {
   if (!line) {
-    newPattern()
+    currentPattern = new Pattern()
+    patterns.push(currentPattern)
     return
   }
 
@@ -23,12 +18,14 @@ function forLine(line) {
 
 function afterFile() {
   let partOneTotal = 0
-  patterns.forEach((pattern, i) => {
-    //console.log(`assessing pattern ${i+1}`)
-    const reflection = pattern.assess()
-    partOneTotal += reflection
+  let partTwoTotal = 0
+  patterns.forEach(pattern => {
+    pattern.assess()
+    partOneTotal += pattern.reflection
+    partTwoTotal += pattern.smudgeReflection
   })
   console.log(`Part 1: ${partOneTotal}`)
+  console.log(`Part 2: ${partTwoTotal}`)
 }
 
 readFile(
