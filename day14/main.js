@@ -10,6 +10,7 @@ function forLine(line) {
 function afterFile() {
   platform.tiltNorth()
   console.log(`Part 1: ${platform.calculateLoad()}`)
+  console.log(`Part 2: ${platform.findLoadAt(1000000000)}`)
 }
 
 readFile(
